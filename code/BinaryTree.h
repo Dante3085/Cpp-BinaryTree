@@ -1,131 +1,11 @@
-#include <iostream>
-#include <random>
 #include <exception>
-#include <map>
-
-template <class T>
-class LinkedList
-{
-public:
-	LinkedList() : first{nullptr}, last{nullptr}, size{0} {}
-	virtual ~LinkedList() 
-	{
-		int SIZE = size;
-		for (int i = 0; i < SIZE; ++i)
-			remove(0);
-	}
-
-	void append(T data)
-	{
-		Link<T>* newL = new Link<T>{data, nullptr};
-		if (first == nullptr)
-			first = last = newL;
-		else
-		{
-			last->next = newL;
-			last = newL;
-		}
-		++size;
-	}
-
-	T remove(int index)
-	{
-		// INVALID INDEX
-		if (index < 0 || index >= size)
-			throw std::invalid_argument( "index < 0 || index >= size" );
-
-		Link<T>* ptr;
-		T tempData;
-
-		// REMOVE FIRST
-		if (index == 0)
-		{
-			ptr = first->next;
-			tempData = first->data;
-			delete first;
-			first = ptr;
-		}
-
-		// REMOVE ANYWHERE
-		else
-		{
-			ptr = first;
-			int count = 0;
-			while(count++ != (index - 1))
-				ptr = ptr->next;
-
-			Link<T>* temp = ptr->next->next;
-			tempData = ptr->next->data;
-			delete ptr->next;
-			ptr->next = temp;
-		}
-		--size;
-		return tempData;
-	}
-
-	void traverse(void(*work)(T data))
-	{
-		Link<T>* ptr = first;
-		while(ptr != nullptr)
-		{
-			work(ptr->data);
-			ptr = ptr->next;
-		}
-	}
-
-	int getSize()
-	{
-		return size;
-	}
-
-	bool isEmpty()
-	{
-		return size == 0;
-	}
-
-private:
-
-	// NOTE(moritz): Komische Kompilierungsfehler treten auf,
-	// wenn "template <class T>" fehlt und das struct nach
-	// den beiden Link Membern steht.
-	template <class T>
-	struct Link
-	{
-		Link(T data, Link<T>* next) : data{data}, next{next} {}
-		~Link() {}
-
-		T data;
-		Link<T>* next;
-	};
-
-	Link<T>* first;
-	Link<T>* last;
-	int size;
-};
-
-template <class T>
-class Queue : public LinkedList<T>
-{
-public:
-	Queue() : LinkedList{} {}
-	~Queue() {}
-
-	void enqueue(T data)
-	{
-		append(data);
-	}
-
-	T dequeue()
-	{
-		return remove(0);
-	}
-};
+#include "LinkedList.h"
 
 template <class T>
 class Node
 {
 public:
-	Node(T data, int depth) : data{data}, depth{depth} leftChild{nullptr}, rightChild{nullptr} {}
+	Node(T data) : data{data}, leftChild{nullptr}, rightChild{nullptr} {}
 	~Node(){}
 
 	T getData() const
@@ -171,7 +51,6 @@ public:
 
 private:
 	T data;
-	int depth;
 	Node<T>* leftChild;
 	Node<T>* rightChild;
 };
@@ -180,15 +59,15 @@ template <class T>
 class BinaryTree
 {
 public:
-	BinaryTree() : root{nullptr}, count{0} {}
+	BinaryTree() : root{nullptr}, size{0} {}
 	~BinaryTree()
 	{
 		deleteRecursive(root);
 	}
 
-	int size()
+	int getSize()
 	{
-		return count;
+		return size;
 	}
 
 	bool isEmpty()
@@ -198,8 +77,8 @@ public:
 
 	void add(T data)
 	{
-		root = root == nullptr ? new Node<T>{data, 0} : addRecursive(root, data);
-		++count;
+		root = root == nullptr ? new Node<T>{data} : addRecursive(root, data);
+		++size;
 	}
 
 	bool contains(T data)
@@ -210,8 +89,8 @@ public:
 	void remove(T data)
 	{		
 		root = removeRecursive(root, data);
-		if (count > 0)
-			--count;
+		if (size > 0)
+			--size;
 	}
 
 	void traversePreOrder(void(*work)(T data))
@@ -239,7 +118,7 @@ public:
 
 private:
 	Node<T>* root;
-	int count;
+	int size;
 
 	// NOTE(moritz): Can't figure out how to properly insert new lines so that
 	// each level with it's Nodes is properly printed.
@@ -392,24 +271,3 @@ private:
 		work(current->getData());
 	}
 };
-
-template <class T>
-void print(T data)
-{
-	std::cout << data;
-}
-
-int main()
-{
-	BinaryTree<int> bt{};
-	bt.add(5);
-	bt.add(2);
-	bt.add(7);
-	bt.add(1);
-	bt.add(3);
-
-	bt.levelOrderTraversal(&print);	
-
-	std::cout << "END_OF_PROGRAM" << std::endl;
-	return 0;
-}
